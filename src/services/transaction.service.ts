@@ -1,0 +1,56 @@
+import apiClient, { extractData, extractMeta, ApiResponse } from '../lib/api-client';
+import { PaginationMeta } from '../types';
+
+export interface Transaction {
+  id: string;
+  type: 'escrow_deposit' | 'escrow_release' | 'escrow_refund' | 'consultation_payment' | 'platform_fee';
+  amount: number;
+  status: 'success' | 'pending' | 'failed';
+  payment_reference?: string;
+  description: string;
+  entity_type: string;
+  entity_id: string;
+  total_amount?: number;
+  platform_fee?: number;
+  net_amount?: number;
+  milestone?: {
+    id: string;
+    title: string;
+  };
+  project?: {
+    id: string;
+    title: string;
+  };
+  consultation?: {
+    id: string;
+    scheduled_at?: string;
+  };
+  client?: {
+    id: string;
+    name: string;
+  };
+  company?: {
+    id: string;
+    name: string;
+  };
+  created_at: string;
+  updated_at: string;
+}
+
+export const transactionService = {
+  async list(params?: {
+    per_page?: number;
+    page?: number;
+    type?: 'escrow' | 'consultation' | 'all';
+    status?: 'success' | 'pending' | 'failed' | 'all';
+  }): Promise<{ transactions: Transaction[]; meta: PaginationMeta }> {
+    const response = await apiClient.get<ApiResponse<Transaction[]>>('/transactions', {
+      params,
+    });
+    
+    const transactions = extractData<Transaction[]>(response);
+    const meta = extractMeta(response) as PaginationMeta;
+    
+    return { transactions, meta };
+  },
+};
